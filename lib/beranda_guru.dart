@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:si_absen/hasil_absen.dart';
+import 'package:si_absen/laporan.dart';
+import 'package:si_absen/login_guru.dart';
 
 
 class MyApp extends StatelessWidget {
@@ -27,19 +31,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   late PageController _reportController;
   late PageController _historyController;
   int _reportPage = 0;
   int _historyPage = 0;
 
-  
-  static const Color _menuIconBgColor = Color(0xFFE8EAF6); 
-  static const Color _menuIconColor = Color(0xFF3F51B5); 
-  static const Color _brandColor = Color(0xFFD32F2F); 
-  static const Color _cardColor = Color(0xFFF5F5F5); 
-  static const Color _activeDotColor = Colors.orange; 
-  static const Color _inactiveDotColor = Color(0xFFE0E0E0); 
+  static const Color _menuIconBgColor = Color(0xFFE8EAF6);
+  static const Color _menuIconColor = Color(0xFF3F51B5);
+  static const Color _brandColor = Color(0xFFD32F2F);
+  static const Color _cardColor = Color(0xFFF5F5F5);
+  static const Color _activeDotColor = Colors.orange;
+  static const Color _inactiveDotColor = Color(0xFFE0E0E0);
 
   @override
   void initState() {
@@ -54,6 +56,194 @@ class _HomeScreenState extends State<HomeScreen> {
     _historyController.dispose();
     super.dispose();
   }
+
+  Future<void> _capturePhoto() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ResultScreen(imagePath: pickedFile.path),
+        ),
+      );
+    }
+  }
+
+
+  void _showClassSelector() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
+      builder: (BuildContext bc) {
+        return _buildClassSelectorSheet();
+      },
+    );
+  }
+
+  Widget _buildClassSelectorSheet() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Pilih Kelas yang akan diabsen',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildClassCard(className: 'Kelas 5', icon: Icons.book_outlined),
+              _buildClassCard(className: 'Kelas 6', icon: Icons.book_outlined),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClassCard({required String className, required IconData icon}) {
+    return InkWell(
+      onTap: () async {
+        Navigator.pop(context);
+        await _capturePhoto();
+      },
+      borderRadius: BorderRadius.circular(16.0),
+      child: Container(
+        width: 130,
+        padding: const EdgeInsets.symmetric(vertical: 20.0),
+        decoration: BoxDecoration(
+          color: _cardColor,
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 40, color: _menuIconColor),
+            const SizedBox(height: 12),
+            Text(
+              className,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showMenuBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,        // allow full-height control
+      isDismissible: true,
+      enableDrag: true,
+      barrierColor: Colors.black54,
+      backgroundColor: Colors.transparent, // let our container span full width
+      builder: (BuildContext bc) {
+        final double screenWidth = MediaQuery.of(context).size.width;
+        return SafeArea(
+          bottom: true,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: GestureDetector(
+              onTap: () {}, // absorb taps inside sheet
+              child: Container(
+                width: screenWidth, // make sheet as wide as the app screen
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+                ),
+                child: _buildMenuSheet(), // existing content
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMenuSheet() {
+    // keep content but ensure it can expand horizontally when placed in the full-width container
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch, // let children take available width
+      children: [
+        _buildDataMuridCard(),
+        const SizedBox(height: 24),
+        _buildLogoutButton(),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildDataMuridCard() {
+    return InkWell(
+      onTap: () {
+        print('Data Murid Tapped');
+        Navigator.pop(context);
+      },
+      borderRadius: BorderRadius.circular(16.0),
+      child: Container(
+        width: 150,
+        padding: const EdgeInsets.symmetric(vertical: 24.0),
+        decoration: BoxDecoration(
+          color: _cardColor,
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.groups_outlined, size: 40, color: _menuIconColor),
+            const SizedBox(height: 12),
+            const Text(
+              'Data Murid',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return OutlinedButton(
+      onPressed: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+        print('Logout Tapped');
+      },
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
+        foregroundColor: _menuIconColor,
+        side: BorderSide(color: _menuIconColor.withOpacity(0.5), width: 1.5),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+      ),
+      child: const Text(
+        'Logout',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +266,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -108,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                '25, Oktober 2025', 
+                '25, Oktober 2025',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[600],
@@ -116,41 +305,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: _menuIconBgColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.menu,
-              color: _menuIconColor,
-              size: 28,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  
-  Widget _buildMenuGrid() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildMenuCard(
-              icon: Icons.face_retouching_natural,
-              label: 'Absen Murid',
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildMenuCard(
-              icon: Icons.bar_chart, 
-              label: 'Laporan',
+          // --- GESTUREDETECTOR DITAMBAHKAN DI SINI ---
+          GestureDetector(
+            onTap: _showMenuBottomSheet, // <-- Panggil fungsi menu
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _menuIconBgColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.menu,
+                color: _menuIconColor,
+                size: 28,
+              ),
             ),
           ),
         ],
@@ -158,7 +326,43 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
- 
+
+  Widget _buildMenuGrid() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: _showClassSelector,
+              child: _buildMenuCard(
+                icon: Icons.face_retouching_natural,
+                label: 'Absen Murid',
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReportScreen(),
+                  ),
+                );
+              },
+              child: _buildMenuCard(
+                icon: Icons.bar_chart,
+                label: 'Laporan',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMenuCard({required IconData icon, required String label}) {
     return Card(
       elevation: 0,
@@ -180,9 +384,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  
   Widget _buildDailyReportCard() {
-
     final List<Widget> reportPages = [
       _buildReportPage(className: 'Kelas 6', present: 35, absent: 3),
       _buildReportPage(className: 'Kelas 5', present: 30, absent: 1),
@@ -205,7 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               SizedBox(
-                height: 150, 
+                height: 150,
                 child: PageView.builder(
                   controller: _reportController,
                   itemCount: reportPages.length,
@@ -234,7 +436,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  
   Widget _buildReportPage({
     required String className,
     required int present,
@@ -250,24 +451,28 @@ class _HomeScreenState extends State<HomeScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            
             Column(
               children: [
-                const Text('Hadir', style: TextStyle(fontSize: 14, color: Colors.black54)),
+                const Text('Hadir',
+                    style: TextStyle(fontSize: 14, color: Colors.black54)),
                 const SizedBox(height: 8),
                 const Icon(Icons.check, color: Colors.green, size: 50),
                 const SizedBox(height: 8),
-                Text('$present Orang', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('$present Orang',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
-           
             Column(
               children: [
-                const Text('Tidak Hadir', style: TextStyle(fontSize: 14, color: Colors.black54)),
+                const Text('Tidak Hadir',
+                    style: TextStyle(fontSize: 14, color: Colors.black54)),
                 const SizedBox(height: 8),
                 const Icon(Icons.close, color: Colors.red, size: 50),
                 const SizedBox(height: 8),
-                Text('$absent Orang', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text('$absent Orang',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
           ],
@@ -276,13 +481,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  
   Widget _buildHistoryCard() {
-    
     final List<String> historyImages = [
-      
       'images/fotosd1.jpeg',
-      
       'images/fotosd2.jpeg',
     ];
 
@@ -307,7 +508,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               SizedBox(
                 height: 180,
                 child: PageView.builder(
@@ -331,7 +532,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               color: Colors.grey[300],
-                              child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                              child: const Icon(Icons.broken_image,
+                                  size: 50, color: Colors.grey),
                             );
                           },
                         ),
@@ -341,7 +543,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-             
+
               Center(
                 child: _buildPageIndicator(
                   currentPage: _historyPage,
@@ -355,7 +557,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  
   Widget _buildPageIndicator({required int currentPage, required int numPages}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
