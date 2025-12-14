@@ -45,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
-    final email = _usernameController.text.trim(); // Sekarang pakai email
+    final email = _usernameController.text.trim();
     final password = _passwordController.text.trim();
 
     try {
@@ -55,7 +55,6 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (authResponse.user != null) {
-        // Ambil data guru (nama, kelas) dari tabel 'guru'
         final guruData = await Supabase.instance.client
             .from('guru')
             .select('nama_guru, kelas')

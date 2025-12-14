@@ -30,7 +30,6 @@ class _ReportScreenState extends State<ReportScreen> {
   late PageController _reportController;
   int _reportPage = 0;
 
-  // --- WARNA ---
   static const Color _menuIconBgColor = Color(0xFFE8EAF6);
   static const Color _menuIconColor = Color(0xFF3F51B5);
   static const Color _brandColor = Color(0xFFD32F2F);
@@ -39,9 +38,6 @@ class _ReportScreenState extends State<ReportScreen> {
   static const Color _activeDotColor = Colors.orange;
   static const Color _inactiveDotColor = Color(0xFFE0E0E0);
 
-  // Data Pie Chart sudah tidak diperlukan
-  // final Map<String, double> _chartData = ...
-  // final List<Color> _chartColorList = ...
 
   @override
   void initState() {
@@ -63,11 +59,10 @@ class _ReportScreenState extends State<ReportScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(), // Header sudah diubah
+              _buildHeader(),
               const SizedBox(height: 16),
-              // _buildMonthlyChartCard(), // <-- Grafik Pie Dihapus
+              // _buildMonthlyChartCard(),
 
-              // Menampilkan judul "Riwayat Laporan"
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
@@ -77,9 +72,9 @@ class _ReportScreenState extends State<ReportScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Menampilkan kartu laporan 2x
+
               _buildReportHistorySection(),
-              const SizedBox(height: 16), // Jarak antar kartu
+              const SizedBox(height: 16),
               _buildReportHistorySection(),
               const SizedBox(height: 24),
             ],
@@ -89,9 +84,6 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  // -----------------------------------------------------------------
-  // --- HEADER DIUBAH MENYESUAIKAN GAMBAR ---
-  // -----------------------------------------------------------------
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -99,18 +91,18 @@ class _ReportScreenState extends State<ReportScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Kolom kiri: Logo, Nama, Tanggal
+
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(
-                Icons.school, // Ikon default pengganti logo
+                Icons.school,
                 color: _brandColor,
                 size: 40,
               ),
               const SizedBox(height: 8),
               const Text(
-                'Orang Tua Murid', // <-- Judul diubah
+                'Orang Tua Murid',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -129,7 +121,7 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
           // Tombol Menu
           GestureDetector(
-            onTap: _showMenuBottomSheet, // <-- Panggil bottom sheet menu
+            onTap: _showMenuBottomSheet,
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -147,17 +139,7 @@ class _ReportScreenState extends State<ReportScreen> {
       ),
     );
   }
-  // --- AKHIR PERUBAHAN HEADER ---
 
-  // Grafik Pie chart dihapus, tidak perlu `_buildMonthlyChartCard`
-  // Widget _buildMonthlyChartCard() { ... }
-
-  // Fungsi ini sudah tidak diperlukan
-  // Widget _buildLegendItem({required Color color, required String text}) { ... }
-
-  // -----------------------------------------------------------------
-  // --- FUNGSI BARU UNTUK BOTTOM SHEET MENU ---
-  // -----------------------------------------------------------------
   void _showMenuBottomSheet() {
     showModalBottomSheet(
       context: context,
@@ -191,7 +173,7 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Widget _buildMenuSheet() {
-    // Menu untuk Orang Tua hanya berisi Logout
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -223,11 +205,10 @@ class _ReportScreenState extends State<ReportScreen> {
       ),
     );
   }
-  // --- AKHIR FUNGSI BOTTOM SHEET ---
+
 
 
   Widget _buildReportHistorySection() {
-    // Data ini sekarang digunakan untuk *setiap* kartu
     final List<Widget> historyPages = [
       _buildReportHistoryPage(
         date: "Sabtu, 25 Oktober 2025",
@@ -258,7 +239,6 @@ class _ReportScreenState extends State<ReportScreen> {
               SizedBox(
                 height: 320,
                 child: PageView.builder(
-                  // Gunakan controller yang sama atau controller baru jika perlu state terpisah
                   controller: _reportController,
                   itemCount: historyPages.length,
                   onPageChanged: (int page) {

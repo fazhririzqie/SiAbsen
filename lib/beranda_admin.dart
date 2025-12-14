@@ -56,7 +56,6 @@ class _HomeScreenState extends State<HomeAdminScreen> {
   final _passwordGuruController = TextEditingController();
   final _confirmPasswordGuruController = TextEditingController();
 
-  // State untuk menyimpan laporan terakhir
   Map<int, Map<String, dynamic>> _latestReports = {};
   bool _isLoadingReports = true;
 
@@ -116,7 +115,6 @@ class _HomeScreenState extends State<HomeAdminScreen> {
   }
 
 
-  /// Menambahkan data guru
   Future<void> _addGuru() async {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController();

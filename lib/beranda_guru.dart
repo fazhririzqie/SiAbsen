@@ -43,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _historyPage = 0;
   String _namaGuru = "Guru";
 
-  // State untuk menyimpan laporan terakhir
   Map<int, Map<String, dynamic>> _latestReports = {};
   bool _isLoadingReports = true;
 
@@ -62,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _reportController = PageController();
     _historyController = PageController();
     _loadGuruData();
-    _fetchLatestReports(); // Panggil fungsi untuk mengambil data
+    _fetchLatestReports();
   }
 
   @override
@@ -72,7 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  /// Mengambil laporan absensi terakhir untuk setiap kelas (5 dan 6)
   Future<void> _fetchLatestReports() async {
     try {
       final List<int> classes = [5, 6];
@@ -120,10 +118,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Hapus semua data dari SharedPreferences
+    await prefs.clear();
 
     if (!mounted) return;
-    // Kembali ke halaman awal dan hapus semua riwayat navigasi
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const OnboardingScreen()),
@@ -136,7 +133,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _capturePhoto(int classNumber) async {
     final picker = ImagePicker();
-    // Tambahkan parameter imageQuality untuk mengurangi ukuran file
     final pickedFile = await picker.pickImage(
       source: ImageSource.camera,
       imageQuality: 50,
@@ -151,21 +147,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (!mounted) return;
 
-      // Tunggu hingga ResultScreen ditutup
+
       await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => ResultScreen(
             imagePath: pickedFile.path,
             hadirCount: faceCount,
-            // Kirim nomor kelas ke ResultScreen
+
             classNumber: classNumber,
           ),
         ),
       );
 
-      // Setelah kembali dari ResultScreen, muat ulang data laporan
-      // untuk menampilkan riwayat absensi yang baru.
       _fetchLatestReports();
     }
   }
@@ -250,11 +244,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showMenuBottomSheet() {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true,        // allow full-height control
+      isScrollControlled: true,
       isDismissible: true,
       enableDrag: true,
       barrierColor: Colors.black54,
-      backgroundColor: Colors.transparent, // let our container span full width
+      backgroundColor: Colors.transparent,
       builder: (BuildContext bc) {
         final double screenWidth = MediaQuery.of(context).size.width;
         return SafeArea(
@@ -262,15 +256,15 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Align(
             alignment: Alignment.bottomCenter,
             child: GestureDetector(
-              onTap: () {}, // absorb taps inside sheet
+              onTap: () {},
               child: Container(
-                width: screenWidth, // make sheet as wide as the app screen
+                width: screenWidth,
                 padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
                 ),
-                child: _buildMenuSheet(), // existing content
+                child: _buildMenuSheet(),
               ),
             ),
           ),
@@ -280,10 +274,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildMenuSheet() {
-    // keep content but ensure it can expand horizontally when placed in the full-width container
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch, // let children take available width
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildDataMuridCard(),
         const SizedBox(height: 24),
@@ -489,7 +482,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildDailyReportCard() {
-    // Urutan kelas untuk ditampilkan di PageView
     final List<int> classOrder = [6, 5];
 
     final List<Widget> reportPages = classOrder.map((classNum) {
@@ -597,16 +589,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHistoryCard() {
-    // Urutan kelas untuk ditampilkan di PageView
     final List<int> classOrder = [6, 5];
 
     final List historyImages = classOrder.map((classNum) {
       final report = _latestReports[classNum];
-      // Jika ada laporan dan URL gambar tidak kosong, gunakan URL tersebut.
-      // Jika tidak, gunakan placeholder.
       return (report != null && report['image_url'] != null && report['image_url'].isNotEmpty)
           ? report['image_url']
-          : 'https://via.placeholder.com/400x200.png?text=No+Image'; // Placeholder URL
+          : 'https://via.placeholder.com/400x200.png?text=No+Image';
     }).toList();
 
     return Padding(
@@ -685,7 +674,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPageIndicator({required int currentPage, required int numPages}) {
-    // Jangan tampilkan indikator jika tidak ada halaman
     if (numPages <= 0) return const SizedBox.shrink();
 
     return Row(
