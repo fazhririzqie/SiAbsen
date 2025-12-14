@@ -1,6 +1,8 @@
+// lib/login_ortu.dart
 import 'package:flutter/material.dart';
-
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:si_absen/laporan_ortu.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -29,11 +31,67 @@ class LoginPageOrtu extends StatefulWidget {
 class _LoginPageOrtuState extends State<LoginPageOrtu> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   static const Color _brandColor = Color(0xFFEC407A);
   static const Color _buttonColor = Color(0xFF7986CB);
   static const Color _fieldBorderColor = Color(0xFFE0E0E0);
   static const Color _focusedBorderColor = Color(0xFF7986CB);
+
+  Future<void> _login() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+    });
+
+    final email = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    try {
+      final authResponse = await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+
+      if (authResponse.user != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('is_ortu_logged_in', true);
+
+        if (!mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LaporanOrtuScreen()),
+              (Route<dynamic> route) => false,
+        );
+      }
+    } on AuthException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Terjadi kesalahan: $error')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,11 +221,7 @@ class _LoginPageOrtuState extends State<LoginPageOrtu> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
-          String username = _usernameController.text;
-          String password = _passwordController.text;
-          print('Login attempt with: $username, $password');
-        },
+        onPressed: _isLoading ? null : _login,
         style: ElevatedButton.styleFrom(
           backgroundColor: _buttonColor,
           foregroundColor: Colors.white,
@@ -177,7 +231,13 @@ class _LoginPageOrtuState extends State<LoginPageOrtu> {
           ),
           elevation: 0,
         ),
-        child: const Text(
+        child: _isLoading
+            ? const SizedBox(
+          height: 24,
+          width: 24,
+          child: CircularProgressIndicator(color: Colors.white),
+        )
+            : const Text(
           'Login',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),

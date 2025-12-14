@@ -1,23 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:si_absen/beranda_admin.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Login Admin Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Poppins',
-      ),
-      home: const LoginPageAdmin(),
-    );
-  }
-}
 
 class LoginPageAdmin extends StatefulWidget {
   const LoginPageAdmin({super.key});
@@ -29,11 +15,77 @@ class LoginPageAdmin extends StatefulWidget {
 class _LoginPageAdminState extends State<LoginPageAdmin> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   static const Color _brandColor = Color(0xFFEC407A);
   static const Color _buttonColor = Color(0xFF7986CB);
   static const Color _fieldBorderColor = Color(0xFFE0E0E0);
   static const Color _focusedBorderColor = Color(0xFF7986CB);
+
+  Future<void> _login() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final email = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    try {
+      final authResponse = await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) return;
+      if (authResponse.user != null) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeAdminScreen()),
+              (Route<dynamic> route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Login gagal. Silakan coba lagi.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } on AuthException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.message),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Terjadi kesalahan. Silakan coba lagi.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,16 +117,16 @@ class _LoginPageAdminState extends State<LoginPageAdmin> {
           ),
         ),
       ),
-
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget> [
+              children: <Widget>[
                 _buildWelcomeText(),
                 const SizedBox(height: 70.0),
                 _buildLogo(),
@@ -104,18 +156,17 @@ class _LoginPageAdminState extends State<LoginPageAdmin> {
       padding: const EdgeInsets.only(top: 30.0),
       child: RichText(
         text: const TextSpan(
-          style: TextStyle(
-            fontSize: 34,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-            fontFamily: 'Poppins',
-            height: 1.3,
-          ),
-          children: <TextSpan>[
-            TextSpan(text: 'Halaman Login\n'),
-            TextSpan(text: 'Admin', style: TextStyle(color: _brandColor)),
-          ]
-        ),
+            style: TextStyle(
+              fontSize: 34,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontFamily: 'Poppins',
+              height: 1.3,
+            ),
+            children: <TextSpan>[
+              TextSpan(text: 'Halaman Login\n'),
+              TextSpan(text: 'Admin', style: TextStyle(color: _brandColor)),
+            ]),
       ),
     );
   }
@@ -146,12 +197,10 @@ class _LoginPageAdminState extends State<LoginPageAdmin> {
       decoration: InputDecoration(
         labelText: labelText,
         labelStyle: const TextStyle(color: Colors.grey),
-
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
           borderSide: const BorderSide(color: _fieldBorderColor, width: 1.5),
         ),
-
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.0),
           borderSide: const BorderSide(color: _focusedBorderColor, width: 2.0),
@@ -164,12 +213,7 @@ class _LoginPageAdminState extends State<LoginPageAdmin> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
-
-          String username = _usernameController.text;
-          String password = _passwordController.text;
-          print('Login attempt with: $username, $password');
-        },
+        onPressed: _isLoading ? null : _login,
         style: ElevatedButton.styleFrom(
           backgroundColor: _buttonColor,
           foregroundColor: Colors.white,
@@ -179,13 +223,20 @@ class _LoginPageAdminState extends State<LoginPageAdmin> {
           ),
           elevation: 0,
         ),
-        child: const Text(
-          'Login',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3,
+                ),
+              )
+            : const Text(
+                'Login',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
       ),
     );
   }
 }
-
-

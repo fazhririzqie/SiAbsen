@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:si_absen/login_admin.dart';
 import 'package:si_absen/login_ortu.dart';
 import 'package:si_absen/beranda_guru.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart'; // Tambahkan ini
+import 'package:shared_preferences/shared_preferences.dart'; // Tambahkan ini
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -32,11 +33,69 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
   static const Color _brandColor = Color(0xFFEC407A);
   static const Color _buttonColor = Color(0xFF7986CB);
   static const Color _fieldBorderColor = Color(0xFFE0E0E0);
   static const Color _focusedBorderColor = Color(0xFF7986CB);
+
+  Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final email = _usernameController.text.trim(); // Sekarang pakai email
+    final password = _passwordController.text.trim();
+
+    try {
+      final authResponse = await Supabase.instance.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+
+      if (authResponse.user != null) {
+        // Ambil data guru (nama, kelas) dari tabel 'guru'
+        final guruData = await Supabase.instance.client
+            .from('guru')
+            .select('nama_guru, kelas')
+            .eq('user_id', authResponse.user!.id)
+            .single();
+
+        // Simpan data guru ke SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('is_guru_logged_in', true);
+        await prefs.setString('nama_guru', guruData['nama_guru']);
+        await prefs.setString('kelas_guru', guruData['kelas'].toString());
+
+        if (!mounted) return;
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+              (Route<dynamic> route) => false,
+        );
+      }
+    } on AuthException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.message)),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengambil data guru: $error')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +162,6 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // New logo widget
   Widget _buildLogo() {
     return Center(
       child: Padding(
@@ -146,13 +204,7 @@ class _LoginPageState extends State<LoginPage> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-          String username = _usernameController.text;
-          String password = _passwordController.text;
-          print('Login attempt with: $username, $password');
-        },
+        onPressed: _isLoading ? null : _login,
         style: ElevatedButton.styleFrom(
           backgroundColor: _buttonColor,
           foregroundColor: Colors.white,
@@ -162,7 +214,13 @@ class _LoginPageState extends State<LoginPage> {
           ),
           elevation: 0,
         ),
-        child: const Text(
+        child: _isLoading
+            ? const SizedBox(
+          height: 24,
+          width: 24,
+          child: CircularProgressIndicator(color: Colors.white),
+        )
+            : const Text(
           'Login',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
@@ -180,7 +238,6 @@ class _LoginPageState extends State<LoginPage> {
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPageAdmin()),
               );
-              print('Admin login tapped');
             },
           ),
           const SizedBox(height: 8.0),
@@ -190,7 +247,6 @@ class _LoginPageState extends State<LoginPage> {
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPageOrtu()),
               );
-              print('Parent login tapped');
             },
           ),
         ],
